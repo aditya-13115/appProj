@@ -5,6 +5,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class ExpensesIncomesTracker extends JFrame {
@@ -20,9 +21,11 @@ public class ExpensesIncomesTracker extends JFrame {
     private final JLabel balanceLabel;
     private final JLabel welcomeLabel; // New label for welcome message
     private double balance;
+    private String username; // Added to store the username
 
     // Constructor modified to accept username
     public ExpensesIncomesTracker(String username) {
+        this.username = username; // Store the username
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception ex) {
@@ -97,6 +100,28 @@ public class ExpensesIncomesTracker extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
+
+        loadEntriesFromDatabase(); // Load existing entries from the database
+    }
+
+    private void loadEntriesFromDatabase() {
+        String sql = "SELECT date, description, amount, type FROM expense_income_entries WHERE username = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String date = resultSet.getString("date");
+                String description = resultSet.getString("description");
+                double amount = resultSet.getDouble("amount");
+                String type = resultSet.getString("type");
+                ExpenseIncomeEntry entry = new ExpenseIncomeEntry(date, description, amount, type);
+                tableModel.addEntry(entry); // Add entry to the table model
+                updateBalance(entry); // Update balance with existing entries
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void addEntry() {
@@ -165,13 +190,14 @@ public class ExpensesIncomesTracker extends JFrame {
     }
 
     private void addEntryToDatabase(ExpenseIncomeEntry entry) {
-        String sql = "INSERT INTO expense_income_entries (date, description, amount, type) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO expense_income_entries (username, date, description, amount, type) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = DatabaseUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, entry.getDate());
-            statement.setString(2, entry.getDescription());
-            statement.setDouble(3, entry.getAmount());
-            statement.setString(4, entry.getType());
+            statement.setString(1, username); // Include username in the insert
+            statement.setString(2, entry.getDate());
+            statement.setString(3, entry.getDescription());
+            statement.setDouble(4, entry.getAmount());
+            statement.setString(5, entry.getType());
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -179,13 +205,14 @@ public class ExpensesIncomesTracker extends JFrame {
     }
 
     private void removeEntryFromDatabase(ExpenseIncomeEntry entry) {
-        String sql = "DELETE FROM expense_income_entries WHERE date = ? AND description = ? AND amount = ? AND type = ?";
+        String sql = "DELETE FROM expense_income_entries WHERE username = ? AND date = ? AND description = ? AND amount = ? AND type = ?";
         try (Connection connection = DatabaseUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, entry.getDate());
-            statement.setString(2, entry.getDescription());
-            statement.setDouble(3, entry.getAmount());
-            statement.setString(4, entry.getType());
+            statement.setString(1, username); // Include username in the delete
+            statement.setString(2, entry.getDate());
+            statement.setString(3, entry.getDescription());
+            statement.setDouble(4, entry.getAmount());
+            statement.setString(5, entry.getType());
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
