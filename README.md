@@ -26,6 +26,17 @@ A simple Java application to track expenses and incomes, allowing users to add, 
 2. Install MySQL server and create a database named `APP_PROJ`.
 3. Import the SQL commands provided below to set up the necessary tables.
 
+
+## Running the Application 🚀
+
+1. Clone or download the repository.
+2. Add the MySQL Connector/J JAR file to your project's classpath.
+3. Open a terminal or command prompt and navigate to the project directory.
+4. Compile the Java files using the following command:
+   ```bash
+   javac -cp .:mysql-connector-java-x.x.x.jar expense_income_tracker/*.java
+
+
 ### SQL Commands to Set Up Database 🗳️
 
 ```sql
@@ -46,14 +57,5 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
-
-## Running the Application 🚀
-
-1. Clone or download the repository.
-2. Add the MySQL Connector/J JAR file to your project's classpath.
-3. Open a terminal or command prompt and navigate to the project directory.
-4. Compile the Java files using the following command:
-   ```bash
-   javac -cp .:mysql-connector-java-x.x.x.jar expense_income_tracker/*.java
 
 
