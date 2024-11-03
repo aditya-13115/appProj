@@ -17,8 +17,6 @@ public class UserLogin extends JFrame {
         setBackground(new Color(240, 240, 240));
 
         JTabbedPane tabbedPane = new JTabbedPane();
-
-        // Create a UI theme
         Color backgroundColor = new Color(230, 230, 250);
         Color buttonColor = new Color(100, 149, 237);
         Color labelColor = new Color(0, 0, 128);

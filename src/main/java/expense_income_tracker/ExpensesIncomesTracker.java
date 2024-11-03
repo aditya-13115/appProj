@@ -3,6 +3,9 @@ package expense_income_tracker;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class ExpensesIncomesTracker extends JFrame {
     private final ExpenseIncomeTableModel tableModel;
@@ -82,8 +85,6 @@ public class ExpensesIncomesTracker extends JFrame {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.setBackground(new Color(245, 245, 245));
         bottomPanel.add(balanceLabel);
-        
-        // Add welcome label to the bottom panel
         bottomPanel.add(welcomeLabel);
 
         setLayout(new BorderLayout());
@@ -99,14 +100,99 @@ public class ExpensesIncomesTracker extends JFrame {
     }
 
     private void addEntry() {
-        // Your existing implementation for adding an entry
+        String date = dateField.getText();
+        String description = descriptionField.getText();
+        double amount;
+
+        try {
+            amount = Double.parseDouble(amountField.getText());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid amount", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        String type = (String) typeCombobox.getSelectedItem();
+        ExpenseIncomeEntry entry = new ExpenseIncomeEntry(date, description, amount, type);
+        tableModel.addEntry(entry);
+        addEntryToDatabase(entry);
+        updateBalance(entry);
     }
 
     private void editEntry() {
-        // Your existing implementation for editing an entry
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow >= 0) {
+            ExpenseIncomeEntry selectedEntry = tableModel.getEntryAt(selectedRow);
+            dateField.setText(selectedEntry.getDate());
+            descriptionField.setText(selectedEntry.getDescription());
+            amountField.setText(String.valueOf(selectedEntry.getAmount()));
+            typeCombobox.setSelectedItem(selectedEntry.getType());
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select an entry to edit.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void removeEntry() {
-        // Your existing implementation for removing an entry
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow >= 0) {
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this entry?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                ExpenseIncomeEntry entryToRemove = tableModel.getEntryAt(selectedRow);
+                tableModel.removeEntry(selectedRow);
+                removeEntryFromDatabase(entryToRemove);
+                updateBalanceOnRemoval(entryToRemove);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select an entry to remove.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateBalance(ExpenseIncomeEntry entry) {
+        if ("Income".equals(entry.getType())) {
+            balance += entry.getAmount();
+        } else {
+            balance -= entry.getAmount();
+        }
+        balanceLabel.setText("Balance: Rs " + balance);
+    }
+
+    private void updateBalanceOnRemoval(ExpenseIncomeEntry entry) {
+        if ("Income".equals(entry.getType())) {
+            balance -= entry.getAmount();
+        } else {
+            balance += entry.getAmount();
+        }
+        balanceLabel.setText("Balance: Rs " + balance);
+    }
+
+    private void addEntryToDatabase(ExpenseIncomeEntry entry) {
+        String sql = "INSERT INTO expense_income_entries (date, description, amount, type) VALUES (?, ?, ?, ?)";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, entry.getDate());
+            statement.setString(2, entry.getDescription());
+            statement.setDouble(3, entry.getAmount());
+            statement.setString(4, entry.getType());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void removeEntryFromDatabase(ExpenseIncomeEntry entry) {
+        String sql = "DELETE FROM expense_income_entries WHERE date = ? AND description = ? AND amount = ? AND type = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, entry.getDate());
+            statement.setString(2, entry.getDescription());
+            statement.setDouble(3, entry.getAmount());
+            statement.setString(4, entry.getType());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new UserLogin());
     }
 }

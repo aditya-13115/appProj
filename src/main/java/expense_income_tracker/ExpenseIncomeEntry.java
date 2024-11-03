@@ -12,7 +12,7 @@ public class ExpenseIncomeEntry {
         this.amount = amount;
         this.type = type;
     }
-
+    
     public String getDate() { return date; }
     public String getDescription() { return description; }
     public double getAmount() { return amount; }

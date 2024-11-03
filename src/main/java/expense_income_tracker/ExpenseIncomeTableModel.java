@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ExpenseIncomeTableModel extends AbstractTableModel {
-    private final List<ExpenseIncomeEntry> entries;
+    private final List<ExpenseIncomeEntry> entries; // This is your list of entries
     private final String[] columnNames = {"Date", "Description", "Amount", "Type"};
 
     public ExpenseIncomeTableModel() {
@@ -45,6 +45,10 @@ public class ExpenseIncomeTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
+    // New method to retrieve the entire entry
+    public ExpenseIncomeEntry getEntryAt(int rowIndex) {
+        return entries.get(rowIndex); // Return the entire entry
+    }
 
     private Object getColumnValue(ExpenseIncomeEntry entry, int columnIndex) {
         switch (columnIndex) {
